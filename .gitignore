@@ -1,0 +1,10 @@
+.DS_STORE
+.vscode/
+
+bin/
+
+sysroot/boot/*
+!sysroot/boot/*.*
+!sysroot/boot/*/
+
+oasis-os.iso
