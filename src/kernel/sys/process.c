@@ -12,11 +12,19 @@ regs_t* pagefault_callback(regs_t* r) {
     asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
     if (!(r->err_code & 0x4)) {
-        ERROR("kernel page fault at %x\n", fault_addr);
+        PANIC("kernel page fault at %x\n", fault_addr);
     }
 
-    process_t* proc = current_process;
-    if ((uint32_t)proc->stack - PAGE_SIZE > fault_addr)
+    uint32_t stack = r->esp;
+    if (stack - PAGE_SIZE <= fault_addr) {
+        if (stack - PAGE_SIZE <= (uint32_t)current_process->brk) {
+            ERROR("stack overflow in process %x\n", current_process->pid);
+            for (;;); // exit process
+        }
+        map_page(current_process->pd, stack & 0xFFFFF000, alloc_frame(), PAGE_WRITE | PAGE_USER);
+    } else {
+        PANIC("page fault at %x in process %x\n", fault_addr, current_process->pid);
+    }
 
     return r;
 }
@@ -33,7 +41,6 @@ process_t* new_process(void* entry) {
 
     proc->pd = (page_dir_t*)malloc_page(sizeof(page_dir_t));
     memcpy(proc->pd, kernel_pd, sizeof(page_dir_t));
-    map_page(proc->pd, 0xFFFFF000, alloc_frame(), PAGE_WRITE | PAGE_USER);
 
     proc->brk = (void*)USER_MEM_START;
 

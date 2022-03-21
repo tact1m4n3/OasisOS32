@@ -85,6 +85,9 @@ void kernel_main(uint32_t mboot_magic, mboot_info_t* mboot_info) {
     initrd_init(initrd_start, initrd_end);
     INFO("initialized devices\n");
 
+    sched_init();
+    INFO("initialized scheduler\n");
+
     syscall_init();
     INFO("initialized syscalls\n");
 
@@ -92,10 +95,10 @@ void kernel_main(uint32_t mboot_magic, mboot_info_t* mboot_info) {
     INFO("mounted initrd\n");
 
     process_t* proc_1 = new_process(&process_entry_1);
-    sched_add(proc_1);
+    sched_ready(proc_1);
 
     process_t* proc_2 = new_process(&process_entry_2);
-    sched_add(proc_2);
+    sched_ready(proc_2);
 
     INFO("starting the scheduler\n");
     sched_start();
