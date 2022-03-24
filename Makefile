@@ -10,7 +10,7 @@ IMAGE := oasis-os.iso
 KERNEL := $(BIN)/oasis-kernel
 INITRD := $(BIN)/oasis-initrd
 
-INITRD_FILES := test.txt
+INITRD_FILES := $(BIN)/test.txt $(BIN)/init
 
 all: image
 
@@ -21,19 +21,24 @@ ifeq ($(shell make -sqC src/kernel || echo 1), 1)
 	$(MAKE) -C src/kernel build
 endif
 
+user:
+ifeq ($(shell make -sqC src/user || echo 1), 1)
+	$(MAKE) -C src/user build
+endif
+
 initrd: $(INITRD)
 
-$(IMAGE): kernel initrd
+$(IMAGE): kernel user initrd
 	cp $(KERNEL) $(SYSROOT)/boot
 	cp $(INITRD) $(SYSROOT)/boot
 	grub-mkrescue -o $@ $(SYSROOT)
 
-test.txt:
+bin/test.txt:
 	echo "Hello world!" > $(BIN)/test.txt
 
 $(INITRD): $(INITRD_FILES)
 	mkdir -pv $(dir $@)
-	tar cf $@ -C $(dir $@) $(INITRD_FILES)
+	tar cf $@ -C $(dir $@) $(notdir $(INITRD_FILES))
 
 .PHONY: clean
 clean:

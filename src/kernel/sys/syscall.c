@@ -3,6 +3,7 @@
 #include <string.h>
 #include <vga.h>
 #include <cpu.h>
+#include <process.h>
 
 static void sys_print(char* s) {
     while (*s != '\0') {
@@ -15,10 +16,11 @@ static regs_t* syscall_callback(regs_t* r) {
     switch (id) {
         case 0:
             sys_print((char*)r->ebx);
-            return r;
+            break;
         default:
-            return r;
+            break;
     }
+    return r;
 }
 
 void syscall_init() {

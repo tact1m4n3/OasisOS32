@@ -14,8 +14,6 @@
 #define INITRD_MEM_START 0x800000
 #define INITRD_MEM_SIZE (2 * M)
 
-#define USER_MEM_START 0xA0000000
-
 #define MEMORY_SIZE (16 * M)
 
 #define PAGE_PRESENT 0x1
@@ -41,6 +39,7 @@ void free_frame(uint32_t frame);
 void virt_init();
 uint32_t virt2phys(page_dir_t* pd, uint32_t addr);
 void switch_page_dir(page_dir_t* pd);
+int is_page(page_dir_t* pd, uint32_t addr);
 int map_page(page_dir_t* pd, uint32_t addr, uint32_t frame, uint16_t flags);
 
 void heap_init();

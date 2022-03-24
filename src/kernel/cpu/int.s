@@ -1,7 +1,6 @@
 %macro ISR_ERR 1
 [global _isr%1]
 _isr%1:
-    cli
     push dword %1
     jmp int_common
 %endmacro
@@ -9,7 +8,6 @@ _isr%1:
 %macro ISR_NO_ERR 1
 [global _isr%1]
 _isr%1:
-    cli
     push dword 0
     push dword %1
     jmp int_common
@@ -18,13 +16,13 @@ _isr%1:
 %macro IRQ 1
 [global _irq%1]
 _irq%1:
-    cli
     push dword 0
     push dword %1 + 0x20
     jmp int_common
 %endmacro
 
 [section .text]
+[global int_return]
 [extern int_handler]
 int_common:
     pusha
@@ -44,7 +42,7 @@ int_common:
     call int_handler
     add esp, 4
     mov esp, eax
-
+int_return:
     pop gs
     pop fs
     pop es
@@ -53,7 +51,6 @@ int_common:
     popa
     add esp, 8
 
-    sti
     iret
 
 ISR_NO_ERR  0

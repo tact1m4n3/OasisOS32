@@ -2,7 +2,7 @@
 
 #include <ports.h>
 #include <cpu.h>
-#include <sched.h>
+#include <process.h>
 
 #define PIT_DATA 0x40
 #define PIT_CMD 0x43
@@ -11,7 +11,8 @@ uint32_t pit_ticks;
 
 static regs_t* pit_callback(regs_t* r) {
     pit_ticks++;
-    return schedule(r);
+    yield();
+    return r;
 }
 
 void pit_init() {

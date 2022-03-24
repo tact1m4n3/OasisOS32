@@ -40,14 +40,6 @@ static void enable_paging() {
     asm volatile("mov %0, %%cr0" : : "r"(cr0));
 }
 
-static int is_page(page_dir_t* pd, uint32_t addr) {
-    if (pd && GET_FLAG(PDE, PAGE_PRESENT) && GET_FLAG(PTE, PAGE_PRESENT)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 void virt_init() {
     tmp_mem = (uint32_t)&end;
 
@@ -56,19 +48,19 @@ void virt_init() {
 
     uint32_t i = KERNEL_MEM_START;
     while (i < KERNEL_MEM_START + KERNEL_MEM_SIZE) {
-        map_page(kernel_pd, i, alloc_frame(), PAGE_WRITE | PAGE_USER);
+        map_page(kernel_pd, i, alloc_frame(), PAGE_WRITE);
         i += PAGE_SIZE;
     }
     
     i = HEAP_MEM_START;
     while (i < HEAP_MEM_START + HEAP_MEM_SIZE) {
-        map_page(kernel_pd, i, alloc_frame(), PAGE_WRITE | PAGE_USER);
+        map_page(kernel_pd, i, alloc_frame(), PAGE_WRITE);
         i += PAGE_SIZE;
     }
 
     i = INITRD_MEM_START;
     while (i < INITRD_MEM_START + INITRD_MEM_SIZE) {
-        map_page(kernel_pd, i, alloc_frame(), PAGE_WRITE | PAGE_USER);
+        map_page(kernel_pd, i, alloc_frame(), PAGE_WRITE);
         i += PAGE_SIZE;
     }
 
@@ -93,6 +85,14 @@ uint32_t virt2phys(page_dir_t* pd, uint32_t addr) {
 
 void switch_page_dir(page_dir_t* pd) {
     asm volatile("mov %0, %%cr3" : : "r"(virt2phys(kernel_pd, (uint32_t)pd)));
+}
+
+int is_page(page_dir_t* pd, uint32_t addr) {
+    if (pd && GET_FLAG(PDE, PAGE_PRESENT) && GET_FLAG(PTE, PAGE_PRESENT)) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 int map_page(page_dir_t* pd, uint32_t addr, uint32_t frame, uint16_t flags) {

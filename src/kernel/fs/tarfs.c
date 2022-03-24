@@ -117,12 +117,11 @@ static dirent_t* tarfs_readdir(fs_node_t* node, uint32_t idx) {
 
     fs_node_t* device = node->device;
 
-    uint8_t buffer[512];
-    tar_header_t* header = (tar_header_t*)&buffer;
+    tar_header_t* header = (tar_header_t*)malloc(sizeof(tar_header_t));
     
     uint32_t offset = 0;
     while (offset < device->length) {
-        vfs_read(device, offset, 512, buffer);
+        vfs_read(device, offset, sizeof(tar_header_t), (uint8_t*)header);
 
         if (memcmp(header->ustar, "ustar", 5)) {
             break;
@@ -133,6 +132,7 @@ static dirent_t* tarfs_readdir(fs_node_t* node, uint32_t idx) {
             memset(dirent, 0, sizeof(dirent_t));
             strcpy(dirent->name, header->filename);
             dirent->inode = offset;
+            free(header);
             return dirent;
         }
 
@@ -143,18 +143,18 @@ static dirent_t* tarfs_readdir(fs_node_t* node, uint32_t idx) {
     }
 
     WARN("tarfs_readdir: index %x out of range\n", idx);
+    free(header);
     return NULL;
 }
 
 static fs_node_t* tarfs_finddir(fs_node_t* node, char* name) {
     fs_node_t* device = node->device;
 
-    uint8_t buffer[512];
-    tar_header_t* header = (tar_header_t*)&buffer;
+    tar_header_t* header = (tar_header_t*)malloc(sizeof(tar_header_t));
     
     uint32_t offset = 0;
     while (offset < device->length) {
-        vfs_read(device, offset, 512, buffer);
+        vfs_read(device, offset, sizeof(tar_header_t), (uint8_t*)header);
 
         if (memcmp(header->ustar, "ustar", 5)) {
             break;
@@ -177,6 +177,7 @@ static fs_node_t* tarfs_finddir(fs_node_t* node, char* name) {
             file->close = NULL;
             file->readdir = NULL;
             file->finddir = NULL;
+            free(header);
             return file;
         }
 
@@ -185,6 +186,7 @@ static fs_node_t* tarfs_finddir(fs_node_t* node, char* name) {
     }
 
     WARN("tarfs_finddir: file %s not found\n", name);
+    free(header);
     return NULL;
 }
 

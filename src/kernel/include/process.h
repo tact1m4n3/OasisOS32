@@ -10,15 +10,18 @@
 
 typedef struct process {
     uint32_t pid;
+    void* stack_ptr;
     uint32_t state;
+    int exit_code;
 
+    uint32_t brk;
     page_dir_t* pd;
-
-    void* brk;
-    void* stack;
 
     struct process* next;
 } process_t;
 
 process_t* new_process(void* entry);
-void proc_brk(process_t* proc, void* brk);
+void proc_brk(process_t* proc, uint32_t brk);
+void yield();
+void ready(process_t* proc);
+void start_scheduler();

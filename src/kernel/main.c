@@ -12,7 +12,7 @@
 #include <initrd.h>
 #include <tarfs.h>
 #include <process.h>
-#include <sched.h>
+#include <elf.h>
 #include <syscall.h>
 
 static void parse_mboot(uint32_t mboot_magic, mboot_info_t* mboot_info, uint32_t* initrd_start, uint32_t* initrd_end) {
@@ -37,20 +37,6 @@ static void parse_mboot(uint32_t mboot_magic, mboot_info_t* mboot_info, uint32_t
         *initrd_end = INITRD_MEM_START + mod_size;
     } else {
         PANIC("no initrd found\n");
-    }
-}
-
-static void process_entry_1() {
-    while (1) {
-        asm volatile("int $0x80" : : "a"(0), "b"("hello from process 1\n"));
-        pit_wait(100);
-    }
-}
-
-static void process_entry_2() {
-    while (1) {
-        asm volatile("int $0x80" : : "a"(0), "b"("hello from process 2\n"));
-        pit_wait(100);
     }
 }
 
@@ -85,23 +71,18 @@ void kernel_main(uint32_t mboot_magic, mboot_info_t* mboot_info) {
     initrd_init(initrd_start, initrd_end);
     INFO("initialized devices\n");
 
-    sched_init();
-    INFO("initialized scheduler\n");
-
     syscall_init();
     INFO("initialized syscalls\n");
 
     tarfs_mount("/initrd", "/dev/initrd");
     INFO("mounted initrd\n");
 
-    process_t* proc_1 = new_process(&process_entry_1);
-    sched_ready(proc_1);
+    process_t* init_process = new_process((void*)0xA0000000);
+    elf_load(init_process, "/initrd/init");
+    ready(init_process);
 
-    process_t* proc_2 = new_process(&process_entry_2);
-    sched_ready(proc_2);
-
-    INFO("starting the scheduler\n");
-    sched_start();
+    INFO("starting scheduler\n");
+    start_scheduler();
 
     PANIC("reached end of kernel...\n");
     for (;;);

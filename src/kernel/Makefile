@@ -27,8 +27,8 @@ $(S_OBJ_FILES) : $(OBJ)/kernel/%.o : $(S_SRC_FILES)
 
 $(C_OBJ_FILES) : $(OBJ)/kernel/%.o : $(C_SRC_FILES)
 	mkdir -pv $(dir $@)
-	$(CC) $(CFLAGS) $(CDEFINES) $(patsubst $(OBJ)/kernel/%.o, %.c, $@) -o $@
+	$(CC) $(CFLAGS) $(patsubst $(OBJ)/kernel/%.o, %.c, $@) -o $@
 
 $(KERNEL): $(ALL_OBJ_FILES)
 	mkdir -pv $(dir $@)
-	$(LD) $(LDFLAGS) -o $@ $^
+	$(LD) $(LDFLAGS) $^ -o $@ 
