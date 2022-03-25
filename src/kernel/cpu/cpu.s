@@ -1,11 +1,11 @@
 [section .text]
-[global cli]
-cli:
+[global _cli]
+_cli:
     cli
     ret
 
-[global sti]
-sti:
+[global _sti]
+_sti:
     sti
     ret
 

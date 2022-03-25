@@ -61,7 +61,7 @@ void kernel_main(uint32_t mboot_magic, mboot_info_t* mboot_info) {
     pit_init();
     INFO("initialized pit\n");
 
-    sti();
+    _sti();
     INFO("interrupts enabled\n");
 
     vfs_init();

@@ -73,9 +73,7 @@ static regs_t* proc_pagefault(regs_t* r) {
 static void scheduler_loop() {
     while (1) {
         process_t* next;
-        // sti();
         while (!(next = queue_pop(&ready_queue)));
-        // cli();
 
         current_process = next;
         switch_page_dir(next->pd);

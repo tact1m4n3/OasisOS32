@@ -9,8 +9,8 @@ typedef struct regs {
 	uint32_t eip, cs, eflags, esp, ss;
 } regs_t;
 
-extern void cli();
-extern void sti();
+extern void _cli();
+extern void _sti();
 
 void gdt_init();
 void set_tss_stack(void* esp0);
