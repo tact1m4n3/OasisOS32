@@ -41,6 +41,7 @@ $(IMAGE): kernel libc user initrd
 bin/test.txt:
 	echo "Hello world!" > $(BIN)/test.txt
 
+.PHONY: $(INITRD)
 $(INITRD): $(INITRD_FILES)
 	mkdir -pv $(dir $@)
 	tar cf $@ -C $(dir $@) $(notdir $(INITRD_FILES))

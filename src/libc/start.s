@@ -1,4 +1,10 @@
 [section .text]
+[global start]
+[extern main]
+start:
+    call main
+    jmp $
+
 [global _syscall]
 _syscall:
     push ebp
