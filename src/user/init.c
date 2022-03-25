@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <print.h>
+#include <syscall.h>
 
 int main() {
-    print("hello from init process\n");
+    _syscall(SYS_print, "hello from init process\n", 0, 0, 0, 0, 0);
 
     return 0;
 }
