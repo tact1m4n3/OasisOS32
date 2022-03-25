@@ -20,7 +20,8 @@ typedef struct process {
     struct process* next;
 } process_t;
 
-process_t* new_process(void* entry);
+process_t* new_process();
+void* proc_init_stack(process_t* proc, void* entry);
 void proc_brk(process_t* proc, uint32_t brk);
 void yield();
 void ready(process_t* proc);

@@ -77,7 +77,7 @@ void kernel_main(uint32_t mboot_magic, mboot_info_t* mboot_info) {
     tarfs_mount("/initrd", "/dev/initrd");
     INFO("mounted initrd\n");
 
-    process_t* init_process = new_process((void*)0xA0000000);
+    process_t* init_process = new_process();
     elf_load(init_process, "/initrd/init");
     ready(init_process);
 

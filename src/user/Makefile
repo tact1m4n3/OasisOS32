@@ -6,21 +6,15 @@ CC := x86_64-linux-gnu-gcc
 LD := x86_64-linux-gnu-ld
 
 SFLAGS := -f elf
-CFLAGS := -c --freestanding -m32
+CFLAGS := -c --freestanding -m32 -I ../libc/include
 LDFLAGS := -n -nostdlib -m elf_i386 -T link.ld
+LDLIBS := -L $(BIN) -l:oasis-libc.a
 
 C_SRC_FILES := $(shell find . -name '*.c')
 C_OBJ_FILES := $(patsubst %.c, $(OBJ)/user/%.o, $(C_SRC_FILES))
 C_BIN_FILES := $(patsubst %.c, $(BIN)/%, $(C_SRC_FILES))
 
-ENTRY_SRC := entry.s
-ENTRY_OBJ := $(OBJ)/user/entry.o
-
-build: $(ENTRY_OBJ) $(C_BIN_FILES)
-
-$(ENTRY_OBJ): $(ENTRY_SRC)
-	mkdir -pv $(dir $@)
-	$(NASM) $(SFLAGS) $^ -o $@
+build: $(C_BIN_FILES)
 
 $(C_OBJ_FILES) : $(OBJ)/user/%.o : $(C_SRC_FILES)
 	mkdir -pv $(dir $@)
@@ -28,4 +22,4 @@ $(C_OBJ_FILES) : $(OBJ)/user/%.o : $(C_SRC_FILES)
 
 $(C_BIN_FILES) : $(BIN)/% : $(C_OBJ_FILES)
 	mkdir -pv $(dir $@)
-	$(LD) $(LDFLAGS) $(ENTRY_OBJ) $(patsubst $(BIN)/%, $(OBJ)/user/%.o, $@) -o $@
+	$(LD) $(LDFLAGS) $(patsubst $(BIN)/%, $(OBJ)/user/%.o, $@) -o $@ $(LDLIBS)

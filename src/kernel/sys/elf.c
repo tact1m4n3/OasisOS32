@@ -59,7 +59,7 @@ static int check_elf_header(elf_ehdr_t* hdr) {
     if (hdr->type != 1 && hdr->type != 2) {
         return 0;
     }
-    if (hdr->entry != 0xA0000000) {
+    if (hdr->entry < 0xA0000000) {
         return 0;
     }
     return 1;
@@ -82,6 +82,8 @@ int elf_load(process_t* proc, char* filename) {
         free(ehdr);
         return 0;
     }
+
+    proc_init_stack(proc, (void*)ehdr->entry);
 
     elf_phdr_t* phdr = (elf_phdr_t*)malloc(sizeof(elf_phdr_t));
     switch_page_dir(proc->pd);

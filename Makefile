@@ -21,6 +21,11 @@ ifeq ($(shell make -sqC src/kernel || echo 1), 1)
 	$(MAKE) -C src/kernel build
 endif
 
+libc:
+ifeq ($(shell make -sqC src/libc || echo 1), 1)
+	$(MAKE) -C src/libc build
+endif
+
 user:
 ifeq ($(shell make -sqC src/user || echo 1), 1)
 	$(MAKE) -C src/user build
@@ -28,7 +33,7 @@ endif
 
 initrd: $(INITRD)
 
-$(IMAGE): kernel user initrd
+$(IMAGE): kernel libc user initrd
 	cp $(KERNEL) $(SYSROOT)/boot
 	cp $(INITRD) $(SYSROOT)/boot
 	grub-mkrescue -o $@ $(SYSROOT)

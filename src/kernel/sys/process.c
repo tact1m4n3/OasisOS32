@@ -90,7 +90,7 @@ static void scheduler_loop() {
     }
 }
 
-process_t* new_process(void* entry) {
+process_t* new_process() {
     if (next_pid == 1) {
         set_int_handler(14, &proc_pagefault);
     }
@@ -98,11 +98,18 @@ process_t* new_process(void* entry) {
     process_t* proc = (process_t*)malloc(4096);
     memset(proc, 0, 4096);
     proc->pid = next_pid++;
-    proc->stack_ptr = (void*)proc + 4096 - sizeof(swtch_stack_t);
+    proc->stack_ptr = (void*)proc + 4096;
     proc->brk = 0xA0000000;
     proc->pd = (page_dir_t*)malloc_page(sizeof(page_dir_t));
     memcpy(proc->pd, kernel_pd, sizeof(page_dir_t));
 
+    proc_init_stack(proc, (void*)0xA0000000);
+
+    return proc;
+}
+
+void* proc_init_stack(process_t* proc, void* entry) {
+    proc->stack_ptr = (void*)proc + 4096 - sizeof(swtch_stack_t);
     swtch_stack_t* stk = (swtch_stack_t*)proc->stack_ptr;
     stk->ebp = (uint32_t)&stk->ebp2;
     stk->ret = (uint32_t)&int_return;
@@ -111,8 +118,7 @@ process_t* new_process(void* entry) {
     stk->r.eflags = 0x206;
     stk->r.esp = 0xFFFFFFFF;
     stk->r.ds = stk->r.es = stk->r.fs = stk->r.gs = stk->r.ss = 0x23;
-
-    return proc;
+    return (void*)&stk->r;
 }
 
 void proc_brk(process_t* proc, uint32_t brk) {

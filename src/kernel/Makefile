@@ -8,7 +8,7 @@ CC := x86_64-linux-gnu-gcc
 LD := x86_64-linux-gnu-ld
 
 SFLAGS := -f elf
-CFLAGS := -c --freestanding -m32 -D OASIS_DEBUG -Iinclude
+CFLAGS := -c --freestanding -m32 -D OASIS_DEBUG -I include
 LDFLAGS := -n -nostdlib -m elf_i386 -T link.ld
 
 S_SRC_FILES := $(shell find . -name '*.s')
