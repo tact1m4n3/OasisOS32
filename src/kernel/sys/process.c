@@ -49,7 +49,7 @@ static process_t* queue_pop(process_queue_t* queue) {
     }
 }
 
-static regs_t* proc_pagefault(regs_t* r) {
+static void proc_pagefault(regs_t* r) {
     uint32_t fault_addr;
     asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
@@ -66,8 +66,6 @@ static regs_t* proc_pagefault(regs_t* r) {
     } else {
         PANIC("page fault at %x in process %x\n", fault_addr, current_process->pid);
     }
-
-    return r;
 }
 
 static void scheduler_loop() {
@@ -119,8 +117,8 @@ void* proc_init_stack(process_t* proc, void* entry) {
     return (void*)&stk->r;
 }
 
-void proc_brk(process_t* proc, uint32_t brk) {
-    while (proc->brk < brk) {
+void proc_brk(process_t* proc, uint32_t addr) {
+    while (proc->brk < addr) {
         map_page(proc->pd, proc->brk, alloc_frame(), PAGE_WRITE | PAGE_USER);
         proc->brk += PAGE_SIZE;
     }

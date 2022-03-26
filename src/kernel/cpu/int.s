@@ -41,7 +41,6 @@ int_common:
     push esp
     call int_handler
     add esp, 4
-    mov esp, eax
 int_return:
     pop gs
     pop fs

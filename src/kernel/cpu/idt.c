@@ -97,18 +97,20 @@ void set_int_handler(uint8_t id, void* handler) {
     int_handlers[id] = handler;
 }
 
-regs_t* int_handler(regs_t* r) {
-    regs_t* (*handler)(regs_t* r);
+void int_handler(regs_t* r) {
+    void (*handler)(regs_t* r);
     handler = int_handlers[r->int_no];
-    if (handler) {
-        r = handler(r);
+    if (handler && r->int_no != 32) {
+        handler(r);
     } else if (r->int_no < 32) {
         PANIC("unhandled exception %x\n", r->int_no);
-    } else {
+    } else if (r->int_no > 32) {
         WARN("unhandled interrupt %x\n", r->int_no);
     }
 
     pic_ack(r->int_no);
 
-    return r;
+    if (handler && r->int_no == 32) {
+        handler(r);
+    }
 }

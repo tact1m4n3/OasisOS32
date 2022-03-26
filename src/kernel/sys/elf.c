@@ -89,7 +89,6 @@ int elf_load(process_t* proc, char* filename) {
     switch_page_dir(proc->pd);
     for (uint32_t i = 0; i < ehdr->phnum; i++) {
         vfs_read(file, ehdr->phoff + i * sizeof(elf_phdr_t), sizeof(elf_phdr_t), (uint8_t*)phdr);
-        // INFO("elf_load: found entry: %x %x %x %x\n", phdr->type, phdr->offset, phdr->vaddr, phdr->paddr);
         if (phdr->type == 1) {
             proc_brk(proc, phdr->vaddr + phdr->memsz);
             vfs_read(file, phdr->offset, phdr->memsz, (uint8_t*)phdr->vaddr);

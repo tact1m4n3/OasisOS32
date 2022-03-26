@@ -9,10 +9,9 @@
 
 uint32_t pit_ticks;
 
-static regs_t* pit_callback(regs_t* r) {
+static void pit_callback(regs_t* r) {
     pit_ticks++;
     yield();
-    return r;
 }
 
 void pit_init() {
