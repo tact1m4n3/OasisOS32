@@ -3,6 +3,11 @@
 [extern main]
 start:
     call main
+
+    mov ebx, eax
+    mov eax, 8
+    int 0x80
+
     jmp $
 
 [global _syscall]

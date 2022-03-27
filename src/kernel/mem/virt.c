@@ -96,11 +96,6 @@ int is_page(page_dir_t* pd, uint32_t addr) {
 }
 
 int map_page(page_dir_t* pd, uint32_t addr, uint32_t frame, uint16_t flags) {
-    if (frame == -1) {
-        WARN("map_page: invalid frame\n");
-        return 0;
-    }
-
     if (!GET_FLAG(PDE, PAGE_PRESENT)) {
         page_table_t* pt;
         if (is_heap) {

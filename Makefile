@@ -10,7 +10,7 @@ IMAGE := oasis-os.iso
 KERNEL := $(BIN)/oasis-kernel
 INITRD := $(BIN)/oasis-initrd
 
-INITRD_FILES := $(BIN)/test.txt $(BIN)/init
+INITRD_FILES := $(BIN)/test.txt $(BIN)/init $(BIN)/hello
 
 all: image
 

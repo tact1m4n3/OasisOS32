@@ -78,7 +78,13 @@ void kernel_main(uint32_t mboot_magic, mboot_info_t* mboot_info) {
     INFO("mounted initrd\n");
 
     process_t* init_process = new_process();
-    elf_load(init_process, "/initrd/init");
+    switch_page_dir(init_process->pd);
+    
+    char* argv[4] = { "/initrd/init", "some", "argument", NULL };
+    char* envp[1] = { NULL };
+    elf_load(init_process, "/initrd/init", 3, argv, envp);
+    
+    switch_page_dir(kernel_pd);
     ready(init_process);
 
     INFO("starting scheduler\n");

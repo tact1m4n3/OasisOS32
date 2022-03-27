@@ -25,6 +25,7 @@ uint32_t next_pid = 1;
 process_t* scheduler;
 process_t* current_process;
 process_queue_t ready_queue;
+process_queue_t retire_queue;
 
 static void queue_push(process_queue_t* queue, process_t* proc) {
     if (!queue->front) {
@@ -49,25 +50,6 @@ static process_t* queue_pop(process_queue_t* queue) {
     }
 }
 
-static void proc_pagefault(regs_t* r) {
-    uint32_t fault_addr;
-    asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
-
-    if (!(r->err_code & 0x4)) {
-        PANIC("kernel page fault at %x\n", fault_addr);
-    }
-
-    uint32_t stack = r->esp;
-    if (stack - PAGE_SIZE <= fault_addr) {
-        if (stack - PAGE_SIZE <= current_process->brk) {
-            PANIC("stack overflow in process %x\n", current_process->pid);
-        }
-        map_page(current_process->pd, stack & 0xFFFFF000, alloc_frame(), PAGE_WRITE | PAGE_USER);
-    } else {
-        PANIC("page fault at %x in process %x\n", fault_addr, current_process->pid);
-    }
-}
-
 static void scheduler_loop() {
     while (1) {
         process_t* next;
@@ -81,16 +63,15 @@ static void scheduler_loop() {
         if (current_process->state != PROC_KILLED) {
             current_process->state = PROC_READY;
             queue_push(&ready_queue, current_process);
+        } else {
+            INFO("process %x exited with code %x\n", current_process->pid, current_process->exit_code);
+            queue_push(&retire_queue, current_process);
         }
         current_process = NULL;
     }
 }
 
-process_t* new_process() {
-    if (next_pid == 1) {
-        set_int_handler(14, &proc_pagefault);
-    }
-
+process_t* new_process(process_t* parent) {
     process_t* proc = (process_t*)malloc(4096);
     memset(proc, 0, 4096);
     proc->pid = next_pid++;
@@ -98,13 +79,21 @@ process_t* new_process() {
     proc->brk = 0xA0000000;
     proc->pd = (page_dir_t*)malloc_page(sizeof(page_dir_t));
     memcpy(proc->pd, kernel_pd, sizeof(page_dir_t));
+    
+    for (uint32_t j = 0; j < PROC_STACK_SIZE; j += PAGE_SIZE) {
+        if (NO_MEMORY) {
+            ERROR("new_process: no memory left\n");
+            return NULL;
+        }
+        map_page(proc->pd, 0xFFFFF000 - j, alloc_frame(), PAGE_WRITE | PAGE_USER);
+    }
 
-    proc_init_stack(proc, (void*)0xA0000000);
+    proc_init_stack(proc, (void*)0xA0000000, (void*)0xFFFFFFFF);
 
     return proc;
 }
 
-void* proc_init_stack(process_t* proc, void* entry) {
+void* proc_init_stack(process_t* proc, void* entry, void* stack) {
     proc->stack_ptr = (void*)proc + 4096 - sizeof(swtch_stack_t);
     swtch_stack_t* stk = (swtch_stack_t*)proc->stack_ptr;
     stk->ebp = (uint32_t)&stk->ebp2;
@@ -112,16 +101,9 @@ void* proc_init_stack(process_t* proc, void* entry) {
     stk->r.eip = (uint32_t)entry;
     stk->r.cs = 0x1B;
     stk->r.eflags = 0x206;
-    stk->r.esp = 0xFFFFFFFF;
+    stk->r.esp = (uint32_t)stack;
     stk->r.ds = stk->r.es = stk->r.fs = stk->r.gs = stk->r.ss = 0x23;
     return (void*)&stk->r;
-}
-
-void proc_brk(process_t* proc, uint32_t addr) {
-    while (proc->brk < addr) {
-        map_page(proc->pd, proc->brk, alloc_frame(), PAGE_WRITE | PAGE_USER);
-        proc->brk += PAGE_SIZE;
-    }
 }
 
 void yield() {

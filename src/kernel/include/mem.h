@@ -14,6 +14,9 @@
 #define INITRD_MEM_START 0x800000
 #define INITRD_MEM_SIZE (2 * M)
 
+#define IS_MEMORY (mem_left != 0)
+#define NO_MEMORY (mem_left == 0)
+
 #define MEMORY_SIZE (16 * M)
 
 #define PAGE_PRESENT 0x1
@@ -30,6 +33,7 @@ typedef struct page_dir {
     page_table_t* ref_tables[1024];
 } page_dir_t;
 
+extern uint32_t mem_left;
 extern page_dir_t* kernel_pd;
 
 void phys_init();

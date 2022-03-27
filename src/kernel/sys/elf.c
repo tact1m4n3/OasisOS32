@@ -65,10 +65,10 @@ static int check_elf_header(elf_ehdr_t* hdr) {
     return 1;
 }
 
-int elf_load(process_t* proc, char* filename) {
-    fs_node_t* file = vfs_lookup(filename);
+int elf_load(process_t* proc, char* path, int argc, char** argv, char** envp) {
+    fs_node_t* file = vfs_lookup(path);
     if (!file) {
-        ERROR("elf_load: failed to find file %x", filename);
+        ERROR("elf_load: failed to find file %s\n", path);
         return 0;
     }
 
@@ -83,18 +83,25 @@ int elf_load(process_t* proc, char* filename) {
         return 0;
     }
 
-    proc_init_stack(proc, (void*)ehdr->entry);
-
     elf_phdr_t* phdr = (elf_phdr_t*)malloc(sizeof(elf_phdr_t));
-    switch_page_dir(proc->pd);
     for (uint32_t i = 0; i < ehdr->phnum; i++) {
         vfs_read(file, ehdr->phoff + i * sizeof(elf_phdr_t), sizeof(elf_phdr_t), (uint8_t*)phdr);
         if (phdr->type == 1) {
-            proc_brk(proc, phdr->vaddr + phdr->memsz);
+            while (proc->brk < phdr->vaddr + phdr->memsz) {
+                if (NO_MEMORY) {
+                    ERROR("elf_load: cannot load elf executable... no memory left\n");
+                    return 0;
+                }
+                map_page(proc->pd, proc->brk, alloc_frame(), PAGE_USER);
+                proc->brk += PAGE_SIZE;
+            }
             vfs_read(file, phdr->offset, phdr->memsz, (uint8_t*)phdr->vaddr);
         }
     }
-    switch_page_dir(kernel_pd);
+
+    /* do something with argv and envp */
+
+    proc_init_stack(proc, (void*)ehdr->entry, (void*)0xFFFFFFFF);
 
     free(file);
     free(ehdr);
